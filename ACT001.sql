@@ -1,11 +1,11 @@
 -- problem 1
 
 CREATE TABLE authors (
-    author_id INT AUTO_INCREMENT PRIMARY KEY,
+    author_id INT UNSIGNED NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     biography TEXT,
-    date_of_birth DATE
+    dob DATE
 );
 
 CREATE TABLE publishers (
@@ -16,11 +16,11 @@ CREATE TABLE publishers (
 
 CREATE TABLE books (
     book_id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(150) NOT NULL,
     isbn VARCHAR(20) NOT NULL UNIQUE,
     publication_date DATE NOT NULL,
     price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
-    publisher_id INT,
+    publisher_id INT,   
     FOREIGN KEY (publisher_id) REFERENCES publishers(publisher_id)
         ON DELETE SET NULL
 );
@@ -41,9 +41,9 @@ CREATE TABLE patients (
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    date_of_birth DATE NOT NULL,
+    dob DATE NOT NULL,
     phone_number VARCHAR(20) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE doctors (
