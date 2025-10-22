@@ -1,4 +1,3 @@
-
 # Case Study: Inventory Management System
 
 ## Scenario
@@ -127,3 +126,82 @@ For each problem set, you are required to:
 **Trigger Type:** `AFTER INSERT`
 
 **Scenario:** When a new product is inserted into the `products` table, a trigger should automatically log the initial stock in the `stock_movements` table. The `old_quantity` should be 0, the `new_quantity` should be the quantity of the new product, and the `movement_type` should be 'INITIAL'.
+
+---
+
+# Answer Key
+
+### Problem 1: Audit Stock Changes
+
+```sql
+CREATE TRIGGER after_product_update
+AFTER UPDATE ON products
+FOR EACH ROW
+BEGIN
+    IF OLD.quantity_on_hand <> NEW.quantity_on_hand THEN
+        INSERT INTO stock_movements (product_id, old_quantity, new_quantity, movement_type)
+        VALUES (OLD.product_id, OLD.quantity_on_hand, NEW.quantity_on_hand, 'UPDATE');
+    END IF;
+END;
+```
+
+### Problem 2: Prevent Negative Stock
+
+```sql
+CREATE TRIGGER before_product_update_negative_stock
+BEFORE UPDATE ON products
+FOR EACH ROW
+BEGIN
+    IF NEW.quantity_on_hand < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Quantity on hand cannot be negative.';
+    END IF;
+END;
+```
+
+### Problem 3: Enforce Maximum Order Quantity
+
+```sql
+CREATE TRIGGER before_product_update_max_order
+BEFORE UPDATE ON products
+FOR EACH ROW
+BEGIN
+    IF (OLD.quantity_on_hand - NEW.quantity_on_hand) > 100 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Cannot decrease stock by more than 100 units in a single transaction.';
+    END IF;
+END;
+```
+
+### Problem 4: Maintain Product Summary
+
+**AFTER INSERT Trigger:**
+
+```sql
+CREATE TRIGGER after_product_insert_summary
+AFTER INSERT ON products
+FOR EACH ROW
+BEGIN
+    UPDATE product_summary SET total_products = total_products + 1;
+END;
+```
+
+**AFTER DELETE Trigger:**
+
+```sql
+CREATE TRIGGER after_product_delete_summary
+AFTER DELETE ON products
+FOR EACH ROW
+BEGIN
+    UPDATE product_summary SET total_products = total_products - 1;
+END;
+```
+
+### Problem 5: Automatically Log Initial Stock
+
+```sql
+CREATE TRIGGER after_product_insert_initial_stock
+AFTER INSERT ON products
+FOR EACH ROW
+BEGIN
+    INSERT INTO stock_movements (product_id, old_quantity, new_quantity, movement_type)
+    VALUES (NEW.product_id, 0, NEW.quantity_on_hand, 'INITIAL');
+END;
