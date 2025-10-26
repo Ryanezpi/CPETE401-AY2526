@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM System Case Study</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333;">
+
+    <div style="max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h1 style="color: #0056b3; text-align: center;">Case Study: ATM System</h1>
+
+        <h2 style="color: #0056b3;">Scenario</h2>
+        <p>
+            You are tasked with designing a simplified Automated Teller Machine (ATM) system using MariaDB. The system needs to manage customer accounts, process transactions (deposits and withdrawals), and ensure data integrity. Key requirements include:
+        </p>
+        <ul style="list-style-type: disc; margin-left: 20px;">
+            <li>Securely store account information, including a PIN.</li>
+            <li>Record all financial transactions.</li>
+            <li>Prevent accounts from going into overdraft (negative balance).</li>
+            <li>Automate balance updates based on transactions.</li>
+        </ul>
+
+        <h2 style="color: #0056b3;">Database Structure</h2>
+        <p>The database will consist of two main tables: <code>accounts</code> and <code>transactions</code>.</p>
+
+        <h3 style="color: #0056b3;"><code>accounts</code> table</h3>
+        <p>This table stores information about each customer account.</p>
+        <pre style="background-color: #e9e9e9; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>CREATE TABLE accounts (
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    account_holder_name VARCHAR(255) NOT NULL,
+    pin INT NOT NULL, -- In a real system, this would be hashed and salted
+    balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00
+);</code></pre>
+
+        <h3 style="color: #0056b3;"><code>transactions</code> table</h3>
+        <p>This table logs all financial movements for audit purposes.</p>
+        <pre style="background-color: #e9e9e9; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>CREATE TABLE transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    account_id INT NOT NULL,
+    transaction_type ENUM('Deposit', 'Withdrawal') NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('Success', 'Failed') NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+);</code></pre>
+
+        <h2 style="color: #0056b3;">Sample Data</h2>
+        <pre style="background-color: #e9e9e9; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>INSERT INTO accounts (account_holder_name, pin, balance) VALUES
+('Alice Smith', 1234, 1000.00),
+('Bob Johnson', 5678, 500.00),
+('Charlie Brown', 9999, 2500.00);</code></pre>
+
+        <h1 style="color: #0056b3; text-align: center;">Problem Sets</h1>
+
+        <h2 style="color: #0056b3;">Instructions for Students</h2>
+        <p>For each problem set, you are required to:</p>
+        <ol style="list-style-type: decimal; margin-left: 20px;">
+            <li>Create the stored procedure or trigger as described.</li>
+            <li>Write SQL statements to test the functionality.</li>
+            <li>Capture screenshots of:
+                <ul style="list-style-type: circle; margin-left: 20px;">
+                    <li>The creation code (e.g., <code>CREATE PROCEDURE</code>, <code>CREATE TRIGGER</code>).</li>
+                    <li>The SQL statements used for testing.</li>
+                    <li>The results of your testing (e.g., contents of tables after execution, output from stored procedures).</li>
+                </ul>
+            </li>
+            <li>Compile your work into a single PDF document. The document should include the problem statement, your SQL code, testing SQL, and corresponding screenshots with results.</li>
+        </ol>
+
+        <h2 style="color: #0056b3;">Problem Set A: Stored Procedures</h2>
+
+        <h3 style="color: #0056b3;">Problem A1: Deposit Funds</h3>
+        <p>
+            <strong>Objective:</strong> Create a stored procedure named <code>DepositFunds</code> that allows a user to deposit money into their account.
+        </p>
+        <p>
+            <strong>Parameters:</strong> <code>p_account_id INT</code>, <code>p_amount DECIMAL(10, 2)</code>.
+        </p>
+        <p>
+            <strong>Logic:</strong>
+            <ol style="list-style-type: decimal; margin-left: 20px;">
+                <li>Validate that <code>p_amount</code> is positive. If not, return an error message.</li>
+                <li>Insert a new record into the <code>transactions</code> table with <code>transaction_type = 'Deposit'</code>, <code>status = 'Success'</code>.</li>
+                <li>The balance update for the <code>accounts</code> table will be handled by a trigger (see Problem B1).</li>
+            </ol>
+        </p>
+
+        <h3 style="color: #0056b3;">Problem A2: Withdraw Funds</h3>
+        <p>
+            <strong>Objective:</strong> Create a stored procedure named <code>WithdrawFunds</code> that allows a user to withdraw money from their account.
+        </p>
+        <p>
+            <strong>Parameters:</strong> <code>p_account_id INT</code>, <code>p_pin INT</code>, <code>p_amount DECIMAL(10, 2)</code>.
+        </p>
+        <p>
+            <strong>Logic:</strong>
+            <ol style="list-style-type: decimal; margin-left: 20px;">
+                <li>Validate that <code>p_amount</code> is positive. If not, return an error message.</li>
+                <li>Verify the provided <code>p_pin</code> against the <code>accounts</code> table for the given <code>p_account_id</code>. If the PIN is incorrect, insert a 'Failed' transaction and return an error message.</li>
+                <li>Check if the account has sufficient balance (<code>balance >= p_amount</code>). If not, insert a 'Failed' transaction and return an error message.</li>
+                <li>If all checks pass, insert a new record into the <code>transactions</code> table with <code>transaction_type = 'Withdrawal'</code>, <code>status = 'Success'</code>.</li>
+                <li>The balance update for the <code>accounts</code> table will be handled by a trigger (see Problem B1).</li>
+            </ol>
+        </p>
+
+        <h3 style="color: #0056b3;">Problem A3: Check Account Balance</h3>
+        <p>
+            <strong>Objective:</strong> Create a stored procedure named <code>CheckBalance</code> that returns the current balance of an account.
+        </p>
+        <p>
+            <strong>Parameters:</strong> <code>p_account_id INT</code>, <code>p_pin INT</code>.
+        </p>
+        <p>
+            <strong>Logic:</strong>
+            <ol style="list-style-type: decimal; margin-left: 20px;">
+                <li>Verify the provided <code>p_pin</code> against the <code>accounts</code> table for the given <code>p_account_id</code>. If the PIN is incorrect, return an error message (e.g., 'Invalid PIN').</li>
+                <li>If the PIN is correct, return the current <code>balance</code> for the specified <code>account_id</code>.</li>
+            </ol>
+        </p>
+
+        <h2 style="color: #0056b3;">Problem Set B: Triggers</h2>
+
+        <h3 style="color: #0056b3;">Problem B1: Automate Balance Update</h3>
+        <p>
+            <strong>Objective:</strong> Create an <code>AFTER INSERT</code> trigger on the <code>transactions</code> table that automatically updates the <code>balance</code> in the <code>accounts</code> table.
+        </p>
+        <p>
+            <strong>Trigger Type:</strong> <code>AFTER INSERT</code> on <code>transactions</code>.
+        </p>
+        <p>
+            <strong>Scenario:</strong> When a new transaction (Deposit or Withdrawal) with <code>status = 'Success'</code> is inserted into the <code>transactions</code> table, the corresponding account's balance in the <code>accounts</code> table should be updated.
+            <ul style="list-style-type: circle; margin-left: 20px;">
+                <li>For 'Deposit' transactions, add the <code>amount</code> to the account's balance.</li>
+                <li>For 'Withdrawal' transactions, subtract the <code>amount</code> from the account's balance.</li>
+            </ul>
+        </p>
+
+        <h3 style="color: #0056b3;">Problem B2: Prevent Overdraft</h3>
+        <p>
+            <strong>Objective:</strong> Create a <code>BEFORE UPDATE</code> trigger on the <code>accounts</code> table to prevent an account's balance from becoming negative.
+        </p>
+        <p>
+            <strong>Trigger Type:</strong> <code>BEFORE UPDATE</code> on <code>accounts</code>.
+        </p>
+        <p>
+            <strong>Scenario:</strong> If an update to an account's balance would result in a <code>balance</code> less than 0, the trigger should prevent the update and return an error message (using <code>SIGNAL SQLSTATE</code>). This trigger will work in conjunction with the <code>AfterTransactionInsert</code> trigger to ensure that even if a withdrawal is attempted, the balance never goes below zero.
+        </p>
+
+    </div>
+
+</body>
+</html>
